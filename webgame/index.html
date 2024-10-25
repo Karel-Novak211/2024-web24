@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jednoduchá Hra</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+        }
+        #gameArea {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            border: 1px solid black;
+            margin: 20px;
+            background-color: lightgray;
+        }
+        #target {
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            background-color: red;
+        }
+        #score, #timer, #gameOver {
+            font-size: 24px;
+        }
+        #gameOver {
+            display: none;
+            color: red;
+        }
+        #highscores {
+            margin-left: 50px;
+            font-size: 18px;
+            text-align: left;
+        }
+        table {
+            border-collapse: collapse;
+            width: 200px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Klikačka Hra</h1>
+        <div id="score">Skóre: 0</div>
+        <div id="timer">Zbývající čas: 30s</div>
+        <div id="gameArea">
+            <div id="target"></div>
+        </div>
+        <div id="gameOver">Game Over! Tvé skóre je: <span id="finalScore"></span></div>
+    </div>
+
+    <div id="highscores">
+        <h2>Highscores</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Skóre</th>
+                </tr>
+            </thead>
+            <tbody id="highscoreTable">
+                <!-- Sem se budou vkládat skóre -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let score = 0;
+        let timeLeft = 30; // 30 sekund na hru
+        const target = document.getElementById('target');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const gameOverMessage = document.getElementById('gameOver');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const highscoreTable = document.getElementById('highscoreTable');
+
+        // Načti předchozí skóre z localStorage
+        function loadHighscores() {
+            const highscores = JSON.parse(localStorage.getItem('highscores')) || [];
+            highscoreTable.innerHTML = ''; // Vyčisti tabulku
+            highscores.forEach((highscore, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${index + 1}</td><td>${highscore}</td>`;
+                highscoreTable.appendChild(row);
+            });
+        }
+
+        // Ulož skóre do localStorage a aktualizuj tabulku
+        function saveHighscore(newScore) {
+            const highscores = JSON.parse(localStorage.getItem('highscores')) || [];
+            highscores.push(newScore);
+            highscores.sort((a, b) => b - a); // Seřaď skóre sestupně
+            localStorage.setItem('highscores', JSON.stringify(highscores));
+            loadHighscores(); // Aktualizuj tabulku
+        }
+
+        // Funkce pro náhodné umístění cíle
+        function randomPosition() {
+            const x = Math.floor(Math.random() * (gameArea.offsetWidth - target.offsetWidth));
+            const y = Math.floor(Math.random() * (gameArea.offsetHeight - target.offsetHeight));
+            target.style.left = `${x}px`;
+            target.style.top = `${y}px`;
+        }
+
+        // Kliknutí na čtvereček zvyšuje skóre a mění jeho pozici
+        target.addEventListener('click', function() {
+            score++;
+            scoreDisplay.textContent = `Skóre: ${score}`;
+            randomPosition();
+        });
+
+        // Odpočítávání času
+        const timer = setInterval(function() {
+            timeLeft--;
+            timerDisplay.textContent = `Zbývající čas: ${timeLeft}s`;
+
+            // Když čas vyprší, zastaví se hra
+            if (timeLeft <= 0) {
+                clearInterval(timer); // Zastavit časovač
+                endGame(); // Zavolat funkci na ukončení hry
+            }
+        }, 1000); // Aktualizace každou sekundu
+
+        // Funkce pro ukončení hry
+        function endGame() {
+            target.style.display = 'none'; // Skrýt čtvereček
+            timerDisplay.style.display = 'none'; // Skrýt časovač
+            gameOverMessage.style.display = 'block'; // Zobrazit zprávu Game Over
+            finalScoreDisplay.textContent = score; // Zobrazit konečné skóre
+            saveHighscore(score); // Uložit skóre
+        }
+
+        // Spustit hru
+        randomPosition();
+        loadHighscores(); // Načíst skóre při načtení stránky
+    </script>
+</body>
+</html>
+
